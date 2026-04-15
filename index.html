@@ -125,6 +125,19 @@ const bookings=[
   {zoneId:6,startWeek:25,endWeek:26,status:'PRE_BOOKED',brand:'뉴발란스',applicant:'황태일',project:'뉴발란스 여름 캠페인'},
   {zoneId:6,startWeek:26,endWeek:27,status:'PRE_BOOKED',brand:'컨버스',applicant:'임주리',project:'컨버스 척테일러 팝업'},
 ];
+const zoneInfo={
+  1:{photo:'https://images.unsplash.com/photo-1555529669-2269763671c0?w=400&q=80',location:'1F 입구 우측',size:'W 6m × D 4m × H 3m',floor:'1F',manager:'박세연',note:'전기 콘센트 4구 제공, 천장 조명 조절 가능'},
+  2:{photo:'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&q=80',location:'1F 입구 좌측',size:'W 5m × D 3m × H 3m',floor:'1F',manager:'박세연',note:'기둥 없는 독립 공간'},
+  3:{photo:'https://images.unsplash.com/photo-1567967455389-e432b5a31a4e?w=400&q=80',location:'2F 에스컬레이터 옆',size:'55인치 × 4대',floor:'2F',manager:'이세영',note:'해상도 2160×3840px, SK쉴더스 원격 송출'},
+  4:{photo:'https://images.unsplash.com/photo-1580974852861-24e4b1c97c9b?w=400&q=80',location:'1F 메인 벽면',size:'W 4m × H 2.5m (LED)',floor:'1F',manager:'이세영',note:'매장 내 가장 높은 노출 위치'},
+  5:{photo:'https://images.unsplash.com/photo-1555529669-2269763671c0?w=400&q=80',location:'1F 중앙',size:'W 8m × D 5m × H 3.5m',floor:'1F',manager:'최진영',note:'전기 6구, 수도 연결 가능'},
+  6:{photo:'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&q=80',location:'2F 테라스 연결부',size:'W 6m × D 4m × H 3m',floor:'2F',manager:'최진영',note:'자연채광 가능, 외부 노출 반오픈형'},
+  7:{photo:'https://images.unsplash.com/photo-1486325212027-8081e485255e?w=400&q=80',location:'건물 남측 외벽',size:'W 12m × H 8m',floor:'외부',manager:'곽민영',note:'시공사: 타라 / 철거·복원 일정 협의 필요'},
+  8:{photo:'https://images.unsplash.com/photo-1567967455389-e432b5a31a4e?w=400&q=80',location:'1F 매장 입구',size:'55인치 × 2대',floor:'1F',manager:'이세영',note:'해상도 2160×3840px'},
+  9:{photo:'https://images.unsplash.com/photo-1555529669-2269763671c0?w=400&q=80',location:'B1F 메인홀',size:'W 10m × D 6m × H 4m',floor:'B1F',manager:'정유진',note:'지하 위치, 엘리베이터 반입 가능'},
+  10:{photo:'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&q=80',location:'강남대로 사거리',size:'W 14m × H 6m',floor:'옥외',manager:'광고사업팀',note:'대행사: 애드빅컴 / 월 400만원'},
+  11:{photo:'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&q=80',location:'홍대입구역 9번 출구',size:'W 10m × H 5m',floor:'옥외',manager:'광고사업팀',note:'대행사: 인컴이즈 / 월 300만원'},
+};
 const tCls={팝업:'type-popup',DID:'type-did',미디어월:'type-mediawall',빌보드:'type-billboard',외벽:'type-exterior'};
 const sCls={APPLIED:'cell-applied',PRE_BOOKED:'cell-prebooked',CONFIRMED:'cell-confirmed',COMPLETED:'cell-completed'};
 const sLbl={APPLIED:'A',PRE_BOOKED:'P',CONFIRMED:'C',COMPLETED:'✓'};
@@ -225,8 +238,33 @@ function openMultiPanel(zone,week,bks){
 function openApplyPanel(zone,week){
   document.getElementById('panelTitle').textContent='구좌 신청';
   document.getElementById('panelSub').textContent=zone?`${zone.name} · ${week}주차`:'';
+  const info=zone?zoneInfo[zone.id]:null;
+  const zoneSection=info?`
+    <div style="margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid #f0f0f0;">
+      <div style="font-size:11px;font-weight:700;color:#888;margin-bottom:10px;letter-spacing:0.3px;">구좌 정보</div>
+      <img src="${info.photo}" alt="구좌 사진" style="width:100%;height:140px;object-fit:cover;border-radius:6px;margin-bottom:12px;background:#f0f0f0;" onerror="this.style.display='none'" />
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+        <div style="background:#f8f9fa;border-radius:5px;padding:8px 10px;">
+          <div style="font-size:10px;color:#999;margin-bottom:2px;">층/위치</div>
+          <div style="font-size:12px;font-weight:600;color:#222;">${info.floor} · ${info.location}</div>
+        </div>
+        <div style="background:#f8f9fa;border-radius:5px;padding:8px 10px;">
+          <div style="font-size:10px;color:#999;margin-bottom:2px;">규격</div>
+          <div style="font-size:12px;font-weight:600;color:#222;">${info.size}</div>
+        </div>
+      </div>
+      <div style="background:#f8f9fa;border-radius:5px;padding:8px 10px;margin-bottom:8px;">
+        <div style="font-size:10px;color:#999;margin-bottom:2px;">담당 관리자</div>
+        <div style="font-size:12px;font-weight:600;color:#222;">${info.manager}</div>
+      </div>
+      <div style="background:#f8f9fa;border-radius:5px;padding:8px 10px;">
+        <div style="font-size:10px;color:#999;margin-bottom:2px;">비고</div>
+        <div style="font-size:12px;color:#444;line-height:1.5;">${info.note}</div>
+      </div>
+    </div>`:'';
   document.getElementById('panelBody').innerHTML=`
-    <div class="form-group"><label class="form-label required">구좌</label><input class="form-input" value="${zone?zone.name:''}" placeholder="구좌 선택" readonly /></div>
+    ${zoneSection}
+    <div style="font-size:11px;font-weight:700;color:#888;margin-bottom:12px;letter-spacing:0.3px;">신청 정보</div>
     <div class="form-group"><label class="form-label required">신청 기간</label><div style="display:flex;gap:6px;align-items:center;"><input class="form-input" type="date" value="2026-04-14" style="flex:1;"/><span style="color:#aaa;">~</span><input class="form-input" type="date" value="2026-04-28" style="flex:1;"/></div></div>
     <div class="form-group"><label class="form-label required">브랜드명</label><input class="form-input" placeholder="브랜드명 입력"/></div>
     <div class="form-group"><label class="form-label required">프로젝트명</label><input class="form-input" placeholder="프로젝트명 입력"/></div>
