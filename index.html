@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>오프라인 구좌 관리 — 52주 캘린더</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f6f8; color: #1a1a1a; font-size: 13px; }
+
+    /* Header */
+    .header { background: #fff; border-bottom: 1px solid #e0e0e0; padding: 0 24px; display: flex; align-items: center; height: 56px; gap: 16px; }
+    .header-title { font-size: 16px; font-weight: 700; color: #111; }
+    .header-divider { width: 1px; height: 20px; background: #e0e0e0; }
+
+    /* Toolbar */
+    .toolbar { background: #fff; border-bottom: 1px solid #e0e0e0; padding: 12px 24px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .year-nav { display: flex; align-items: center; gap: 8px; }
+    .year-nav button { border: 1px solid #d0d0d0; background: #fff; border-radius: 4px; padding: 5px 10px; cursor: pointer; font-size: 13px; color: #444; }
+    .year-nav button:hover { background: #f0f0f0; }
+    .year-label { font-size: 15px; font-weight: 700; min-width: 48px; text-align: center; }
+    .filter-group { display: flex; align-items: center; gap: 8px; }
+    .filter-label { font-size: 12px; color: #666; }
+    select { border: 1px solid #d0d0d0; border-radius: 4px; padding: 5px 10px; font-size: 13px; background: #fff; cursor: pointer; color: #333; }
+    .toggle-wrap { display: flex; align-items: center; gap: 6px; margin-left: auto; }
+    .toggle-wrap label { font-size: 12px; color: #666; cursor: pointer; }
+    .toggle { width: 36px; height: 20px; background: #d0d0d0; border-radius: 10px; position: relative; cursor: pointer; transition: background 0.2s; }
+    .toggle.on { background: #1a73e8; }
+    .toggle::after { content: ''; position: absolute; width: 16px; height: 16px; background: #fff; border-radius: 50%; top: 2px; left: 2px; transition: left 0.2s; }
+    .toggle.on::after { left: 18px; }
+    .btn-new { margin-left: 12px; background: #1a73e8; color: #fff; border: none; border-radius: 4px; padding: 6px 16px; font-size: 13px; font-weight: 600; cursor: pointer; }
+    .btn-new:hover { background: #1557b0; }
+
+    /* Legend */
+    .legend { display: flex; align-items: center; gap: 16px; padding: 10px 24px; background: #fff; border-bottom: 1px solid #e0e0e0; }
+    .legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: #555; }
+    .legend-dot { width: 12px; height: 12px; border-radius: 2px; }
+
+    /* Calendar container */
+    .calendar-wrap { overflow: auto; padding: 16px 24px 40px; }
+    table { border-collapse: collapse; min-width: max-content; }
+
+    /* Sticky headers */
+    .zone-col { position: sticky; left: 0; background: #fff; z-index: 10; min-width: 200px; max-width: 200px; }
+    thead th { position: sticky; top: 0; background: #f8f9fa; z-index: 5; border: 1px solid #e0e0e0; padding: 6px 4px; text-align: center; font-weight: 600; color: #555; font-size: 11px; white-space: nowrap; }
+    thead th.zone-col { z-index: 15; left: 0; text-align: left; padding-left: 12px; font-size: 12px; color: #333; }
+
+    /* Week header */
+    .week-current { background: #e8f0fe !important; color: #1a73e8 !important; }
+
+    /* Body rows */
+    tbody tr { }
+    tbody tr:hover td { background: #fafafa; }
+    tbody td { border: 1px solid #e8e8e8; height: 36px; min-width: 28px; max-width: 28px; padding: 0; text-align: center; vertical-align: middle; cursor: pointer; }
+    tbody td.zone-col { min-width: 200px; max-width: 200px; padding: 0 12px; text-align: left; cursor: default; background: #fff; }
+    tbody td.zone-col:hover { background: #fff !important; }
+
+    /* Group row */
+    .group-row td { background: #f0f4ff; font-weight: 700; font-size: 11px; color: #1a73e8; padding: 4px 12px; border: 1px solid #e0e0e0; cursor: default; }
+    .group-row td:hover { background: #f0f4ff !important; }
+
+    /* Zone name */
+    .zone-name { font-size: 12px; font-weight: 500; color: #333; }
+    .zone-type-badge { display: inline-block; font-size: 10px; padding: 1px 5px; border-radius: 3px; margin-left: 4px; font-weight: 500; }
+    .badge-popup { background: #e8f5e9; color: #2e7d32; }
+    .badge-did { background: #e3f2fd; color: #1565c0; }
+    .badge-mediawall { background: #f3e5f5; color: #6a1b9a; }
+    .badge-billboard { background: #fff3e0; color: #e65100; }
+    .badge-exterior { background: #fce4ec; color: #880e4f; }
+
+    /* Status cells */
+    .cell-empty { background: #fff; }
+    .cell-empty:hover { background: #e8f0fe; }
+    .cell-applied { background: #fff9c4; }
+    .cell-applied:hover { background: #fff176; }
+    .cell-prebooked { background: #ffe0b2; }
+    .cell-prebooked:hover { background: #ffcc80; }
+    .cell-confirmed { background: #c8e6c9; }
+    .cell-confirmed:hover { background: #a5d6a7; }
+    .cell-completed { background: #e0e0e0; color: #999; }
+    .cell-completed:hover { background: #d0d0d0; }
+
+    /* Cell content */
+    .cell-bar { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 600; }
+
+    /* Side panel */
+    .side-panel { position: fixed; right: 0; top: 0; width: 320px; height: 100vh; background: #fff; border-left: 1px solid #e0e0e0; box-shadow: -4px 0 12px rgba(0,0,0,0.08); z-index: 100; display: flex; flex-direction: column; transform: translateX(100%); transition: transform 0.25s ease; }
+    .side-panel.open { transform: translateX(0); }
+    .panel-header { padding: 20px; border-bottom: 1px solid #e0e0e0; display: flex; justify-content: space-between; align-items: flex-start; }
+    .panel-title { font-size: 15px; font-weight: 700; color: #111; }
+    .panel-close { border: none; background: none; font-size: 18px; cursor: pointer; color: #999; padding: 0; line-height: 1; }
+    .panel-body { padding: 20px; overflow-y: auto; flex: 1; }
+    .panel-row { margin-bottom: 16px; }
+    .panel-key { font-size: 11px; color: #888; margin-bottom: 4px; }
+    .panel-val { font-size: 13px; color: #222; font-weight: 500; }
+    .status-badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 700; }
+    .status-applied { background: #fff9c4; color: #856404; }
+    .status-prebooked { background: #ffe0b2; color: #7f4400; }
+    .status-confirmed { background: #c8e6c9; color: #1b5e20; }
+    .panel-actions { padding: 16px 20px; border-top: 1px solid #e0e0e0; display: flex; gap: 8px; }
+    .btn-approve { flex: 1; background: #1a73e8; color: #fff; border: none; border-radius: 4px; padding: 10px; font-size: 13px; font-weight: 600; cursor: pointer; }
+    .btn-reject { flex: 1; background: #fff; color: #d32f2f; border: 1px solid #d32f2f; border-radius: 4px; padding: 10px; font-size: 13px; font-weight: 600; cursor: pointer; }
+
+    /* Empty apply panel */
+    .apply-panel-body { padding: 20px; }
+    .apply-title { font-size: 14px; font-weight: 700; margin-bottom: 16px; color: #111; }
+    .form-group { margin-bottom: 14px; }
+    .form-label { font-size: 11px; color: #666; margin-bottom: 4px; display: block; }
+    .form-input { width: 100%; border: 1px solid #d0d0d0; border-radius: 4px; padding: 8px 10px; font-size: 13px; }
+    .form-input:focus { outline: none; border-color: #1a73e8; }
+    .btn-submit { width: 100%; background: #1a73e8; color: #fff; border: none; border-radius: 4px; padding: 11px; font-size: 13px; font-weight: 600; cursor: pointer; margin-top: 8px; }
+
+    .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.15); z-index: 99; display: none; }
+    .overlay.open { display: block; }
+  </style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <span class="header-title">오프라인 구좌 관리</span>
+  <div class="header-divider"></div>
+  <span style="color:#666; font-size:13px;">52주 캘린더</span>
+</div>
+
+<!-- Toolbar -->
+<div class="toolbar">
+  <div class="year-nav">
+    <button onclick="alert('이전 연도')">&#8592;</button>
+    <span class="year-label">2026</span>
+    <button onclick="alert('다음 연도')">&#8594;</button>
+  </div>
+  <div class="header-divider"></div>
+  <div class="filter-group">
+    <span class="filter-label">구좌 유형</span>
+    <select><option>전체</option><option>팝업</option><option>빌보드</option><option>외벽</option><option>DID</option><option>미디어월</option></select>
+  </div>
+  <div class="filter-group">
+    <span class="filter-label">매장</span>
+    <select><option>전체</option><option>무신사 스토어 홍대</option><option>무신사 스토어 성수</option><option>무신사 스페이스 한남</option></select>
+  </div>
+  <div class="toggle-wrap">
+    <div class="toggle" id="inactiveToggle" onclick="this.classList.toggle('on')"></div>
+    <label for="inactiveToggle">비활성 구좌 포함</label>
+    <button class="btn-new" onclick="openApplyPanel(null, null)">+ 신청하기</button>
+  </div>
+</div>
+
+<!-- Legend -->
+<div class="legend">
+  <span style="font-size:11px; color:#888; font-weight:600;">상태</span>
+  <div class="legend-item"><div class="legend-dot" style="background:#fff;border:1px solid #ccc;"></div> 가용</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#fff9c4;"></div> APPLIED</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#ffe0b2;"></div> PRE_BOOKED</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#c8e6c9;"></div> CONFIRMED</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#e0e0e0;"></div> COMPLETED</div>
+</div>
+
+<!-- Calendar -->
+<div class="calendar-wrap">
+  <table id="calTable"></table>
+</div>
+
+<!-- Side Panel (상세) -->
+<div class="overlay" id="overlay" onclick="closePanel()"></div>
+<div class="side-panel" id="sidePanel">
+  <div class="panel-header">
+    <div>
+      <div class="panel-title" id="panelTitle">신청 상세</div>
+      <div style="font-size:11px;color:#888;margin-top:2px;" id="panelSub"></div>
+    </div>
+    <button class="panel-close" onclick="closePanel()">✕</button>
+  </div>
+  <div class="panel-body" id="panelBody"></div>
+  <div class="panel-actions" id="panelActions"></div>
+</div>
+
+<script>
+  const WEEKS = 52;
+  const CURRENT_WEEK = 16; // 현재 주차 (예시)
+
+  const zones = [
+    { id: 1, venue: '무신사 스토어 홍대', name: '홍대점 1층 팝업존 A', type: '팝업' },
+    { id: 2, venue: '무신사 스토어 홍대', name: '홍대점 1층 팝업존 B', type: '팝업' },
+    { id: 3, venue: '무신사 스토어 홍대', name: '홍대점 DID-1', type: 'DID' },
+    { id: 4, venue: '무신사 스토어 홍대', name: '홍대점 미디어월', type: '미디어월' },
+    { id: 5, venue: '무신사 스토어 성수', name: '성수점 팝업존 A', type: '팝업' },
+    { id: 6, venue: '무신사 스토어 성수', name: '성수점 팝업존 B', type: '팝업' },
+    { id: 7, venue: '무신사 스토어 성수', name: '성수점 외벽', type: '외벽' },
+    { id: 8, venue: '무신사 스토어 성수', name: '성수점 DID-1', type: 'DID' },
+    { id: 9, venue: '무신사 스페이스 한남', name: '한남점 팝업존', type: '팝업' },
+    { id: 10, venue: '(독립 구좌)', name: '강남대로 빌보드', type: '빌보드' },
+    { id: 11, venue: '(독립 구좌)', name: '홍대입구역 빌보드', type: '빌보드' },
+  ];
+
+  // 샘플 부킹 데이터: { zoneId, startWeek, endWeek, status, brand, applicant }
+  const bookings = [
+    { zoneId: 1, startWeek: 14, endWeek: 17, status: 'CONFIRMED', brand: 'MAC', applicant: '박세연', project: 'MAC 신제품 팝업' },
+    { zoneId: 1, startWeek: 20, endWeek: 22, status: 'APPLIED', brand: '뉴발란스', applicant: '황태일', project: '뉴발란스 204 발매' },
+    { zoneId: 2, startWeek: 14, endWeek: 15, status: 'PRE_BOOKED', brand: '엔하이픈', applicant: '임재훈', project: '엔하이픈 앨범 발매' },
+    { zoneId: 2, startWeek: 18, endWeek: 20, status: 'APPLIED', brand: '챔피온', applicant: '임주리', project: '챔피온 x 언더커버' },
+    { zoneId: 3, startWeek: 10, endWeek: 13, status: 'COMPLETED', brand: '나이키', applicant: '김강희', project: '나이키 캠페인' },
+    { zoneId: 3, startWeek: 15, endWeek: 18, status: 'CONFIRMED', brand: '아디다스', applicant: '박상혁', project: '아디다스 DID' },
+    { zoneId: 5, startWeek: 16, endWeek: 19, status: 'CONFIRMED', brand: '로제', applicant: '최진영', project: '블랙핑크 로제 팝업' },
+    { zoneId: 7, startWeek: 12, endWeek: 16, status: 'COMPLETED', brand: '엄브로', applicant: '곽민영', project: '엄브로 외벽 광고' },
+    { zoneId: 7, startWeek: 18, endWeek: 22, status: 'PRE_BOOKED', brand: '나이키', applicant: '유대곤', project: '나이키 외벽' },
+    { zoneId: 10, startWeek: 14, endWeek: 20, status: 'CONFIRMED', brand: '무신사', applicant: '광고사업팀', project: '무신사 브랜드 캠페인' },
+    { zoneId: 11, startWeek: 18, endWeek: 24, status: 'APPLIED', brand: '나이키', applicant: '광고사업팀', project: '나이키 빌보드' },
+  ];
+
+  const typeBadge = { '팝업': 'badge-popup', 'DID': 'badge-did', '미디어월': 'badge-mediawall', '빌보드': 'badge-billboard', '외벽': 'badge-exterior' };
+  const statusClass = { 'APPLIED': 'cell-applied', 'PRE_BOOKED': 'cell-prebooked', 'CONFIRMED': 'cell-confirmed', 'COMPLETED': 'cell-completed' };
+  const statusLabel = { 'APPLIED': 'A', 'PRE_BOOKED': 'P', 'CONFIRMED': 'C', 'COMPLETED': '✓' };
+
+  function getBooking(zoneId, week) {
+    return bookings.find(b => b.zoneId === zoneId && week >= b.startWeek && week <= b.endWeek) || null;
+  }
+
+  function buildCalendar() {
+    const table = document.getElementById('calTable');
+    // Group zones by venue
+    const groups = {};
+    zones.forEach(z => {
+      if (!groups[z.venue]) groups[z.venue] = [];
+      groups[z.venue].push(z);
+    });
+
+    // Header
+    let thead = '<thead><tr>';
+    thead += '<th class="zone-col">구좌</th>';
+    for (let w = 1; w <= WEEKS; w++) {
+      const isCurrent = w === CURRENT_WEEK;
+      thead += `<th class="${isCurrent ? 'week-current' : ''}">${w}</th>`;
+    }
+    thead += '</tr></thead>';
+    table.innerHTML = thead;
+
+    // Body
+    const tbody = document.createElement('tbody');
+    Object.entries(groups).forEach(([venue, venueZones]) => {
+      // Group header
+      const groupRow = document.createElement('tr');
+      groupRow.className = 'group-row';
+      const groupTd = document.createElement('td');
+      groupTd.colSpan = WEEKS + 1;
+      groupTd.textContent = venue;
+      groupRow.appendChild(groupTd);
+      tbody.appendChild(groupRow);
+
+      venueZones.forEach(zone => {
+        const tr = document.createElement('tr');
+        // Zone name cell
+        const nameTd = document.createElement('td');
+        nameTd.className = 'zone-col';
+        nameTd.innerHTML = `<div class="zone-name">${zone.name}<span class="zone-type-badge ${typeBadge[zone.type]}">${zone.type}</span></div>`;
+        tr.appendChild(nameTd);
+
+        for (let w = 1; w <= WEEKS; w++) {
+          const td = document.createElement('td');
+          const booking = getBooking(zone.id, w);
+          if (booking) {
+            td.className = statusClass[booking.status] || '';
+            td.innerHTML = `<div class="cell-bar">${statusLabel[booking.status] || ''}</div>`;
+            td.title = `${booking.brand} / ${booking.status}`;
+            td.onclick = () => openDetailPanel(zone, booking, w);
+          } else {
+            td.className = 'cell-empty';
+            td.onclick = () => openApplyPanel(zone, w);
+          }
+          tr.appendChild(td);
+        }
+        tbody.appendChild(tr);
+      });
+    });
+    table.appendChild(tbody);
+  }
+
+  function openDetailPanel(zone, booking, week) {
+    const statusColors = { 'APPLIED': 'status-applied', 'PRE_BOOKED': 'status-prebooked', 'CONFIRMED': 'status-confirmed' };
+    document.getElementById('panelTitle').textContent = booking.project || booking.brand;
+    document.getElementById('panelSub').textContent = `${zone.name} · ${week}주차`;
+    document.getElementById('panelBody').innerHTML = `
+      <div class="panel-row"><div class="panel-key">상태</div><div class="panel-val"><span class="status-badge ${statusColors[booking.status] || ''}">${booking.status}</span></div></div>
+      <div class="panel-row"><div class="panel-key">구좌</div><div class="panel-val">${zone.name}</div></div>
+      <div class="panel-row"><div class="panel-key">브랜드</div><div class="panel-val">${booking.brand}</div></div>
+      <div class="panel-row"><div class="panel-key">프로젝트</div><div class="panel-val">${booking.project}</div></div>
+      <div class="panel-row"><div class="panel-key">신청자</div><div class="panel-val">${booking.applicant}</div></div>
+      <div class="panel-row"><div class="panel-key">신청 기간</div><div class="panel-val">${booking.startWeek}주 ~ ${booking.endWeek}주</div></div>
+      <div style="margin-top:20px;padding-top:16px;border-top:1px solid #f0f0f0;">
+        <div style="font-size:11px;font-weight:700;color:#888;margin-bottom:10px;">상태 변경 이력</div>
+        <div style="font-size:12px;color:#555;line-height:2;">
+          <div>🟡 2026-04-10 · APPLIED · ${booking.applicant}</div>
+          ${booking.status !== 'APPLIED' ? `<div>🟠 2026-04-11 · PRE_BOOKED · 스토어 담당자</div>` : ''}
+          ${booking.status === 'CONFIRMED' || booking.status === 'COMPLETED' ? `<div>🟢 2026-04-12 · CONFIRMED · 스토어 담당자</div>` : ''}
+          ${booking.status === 'COMPLETED' ? `<div>⚫ 2026-04-14 · COMPLETED · 시스템 자동</div>` : ''}
+        </div>
+      </div>
+    `;
+    const actions = document.getElementById('panelActions');
+    if (booking.status === 'APPLIED') {
+      actions.innerHTML = `<button class="btn-approve">1차 승인 (PRE_BOOKED)</button><button class="btn-reject">반려</button>`;
+    } else if (booking.status === 'PRE_BOOKED') {
+      actions.innerHTML = `<button class="btn-approve">최종 확정 (CONFIRMED)</button><button class="btn-reject">반려</button>`;
+    } else {
+      actions.innerHTML = '';
+    }
+    openPanel();
+  }
+
+  function openApplyPanel(zone, week) {
+    document.getElementById('panelTitle').textContent = '구좌 신청';
+    document.getElementById('panelSub').textContent = zone ? `${zone.name} · ${week}주차` : '';
+    document.getElementById('panelBody').innerHTML = `
+      <div class="form-group">
+        <label class="form-label">구좌</label>
+        <input class="form-input" value="${zone ? zone.name : ''}" placeholder="구좌를 선택하세요" readonly />
+      </div>
+      <div class="form-group">
+        <label class="form-label">신청 기간</label>
+        <div style="display:flex;gap:6px;">
+          <input class="form-input" type="date" value="2026-04-14" style="flex:1;" />
+          <span style="line-height:36px;color:#888;">~</span>
+          <input class="form-input" type="date" value="2026-04-28" style="flex:1;" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">브랜드명 *</label>
+        <input class="form-input" placeholder="브랜드명 입력" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">프로젝트명 *</label>
+        <input class="form-input" placeholder="프로젝트명 입력" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">커머스 유형</label>
+        <select class="form-input"><option>선택</option><option>파트너십강화</option><option>브랜드이슈</option><option>IP</option><option>기타</option></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">무신사 입점여부</label>
+        <select class="form-input"><option>선택</option><option>입점</option><option>미입점</option><option>입점예정</option></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">요청사항</label>
+        <textarea class="form-input" rows="3" placeholder="자유 입력 (최대 500자)"></textarea>
+      </div>
+      <button class="btn-submit">신청 제출</button>
+    `;
+    document.getElementById('panelActions').innerHTML = '';
+    openPanel();
+  }
+
+  function openPanel() {
+    document.getElementById('sidePanel').classList.add('open');
+    document.getElementById('overlay').classList.add('open');
+  }
+
+  function closePanel() {
+    document.getElementById('sidePanel').classList.remove('open');
+    document.getElementById('overlay').classList.remove('open');
+  }
+
+  buildCalendar();
+</script>
+</body>
+</html>
