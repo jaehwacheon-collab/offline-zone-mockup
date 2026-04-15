@@ -28,7 +28,8 @@
     .cell-prebooked { background: #ffe0b2; }
     .cell-confirmed { background: #c8e6c9; }
     .cell-completed { background: #e0e0e0; }
-    .cell-bar { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; color: rgba(0,0,0,0.35); }
+    .cell-bar { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; color: rgba(0,0,0,0.35); position: relative; }
+    .cell-count { position: absolute; top: 1px; right: 2px; background: #e65100; color: #fff; font-size: 8px; font-weight: 800; border-radius: 50%; width: 13px; height: 13px; display: flex; align-items: center; justify-content: center; line-height: 1; }
   </style>
 </head>
 <body>
@@ -79,6 +80,8 @@
   <div class="legend-item"><div class="legend-dot" style="background:#ffe0b2;border-color:#ffb74d;"></div>PRE_BOOKED</div>
   <div class="legend-item"><div class="legend-dot" style="background:#c8e6c9;border-color:#81c784;"></div>CONFIRMED</div>
   <div class="legend-item"><div class="legend-dot" style="background:#e0e0e0;border-color:#bdbdbd;"></div>COMPLETED</div>
+  <div class="hdivider"></div>
+  <div class="legend-item"><div class="legend-dot" style="background:#ffe0b2;border-color:#ffb74d;position:relative;"><span style="position:absolute;top:-4px;right:-5px;background:#e65100;color:#fff;font-size:7px;font-weight:800;border-radius:50%;width:11px;height:11px;display:flex;align-items:center;justify-content:center;">N</span></div>&nbsp;&nbsp;가부킹 복수 경합</div>
 </div>
 <div class="calendar-wrap"><table id="calTable"></table></div>
 <div class="overlay" id="overlay" onclick="closePanel()"></div>
@@ -117,12 +120,17 @@ const bookings=[
   {zoneId:7,startWeek:18,endWeek:22,status:'PRE_BOOKED',brand:'나이키',applicant:'유대곤',project:'나이키 외벽'},
   {zoneId:10,startWeek:14,endWeek:20,status:'CONFIRMED',brand:'무신사',applicant:'광고사업팀',project:'무신사 브랜드 캠페인'},
   {zoneId:11,startWeek:18,endWeek:24,status:'APPLIED',brand:'나이키',applicant:'광고사업팀',project:'나이키 빌보드'},
+  // 복수 가부킹 케이스 — 성수점 팝업존 B, 25~27주, 3건 경합 중
+  {zoneId:6,startWeek:25,endWeek:27,status:'PRE_BOOKED',brand:'아디다스',applicant:'이수현',project:'아디다스 오리지널스 팝업'},
+  {zoneId:6,startWeek:25,endWeek:26,status:'PRE_BOOKED',brand:'뉴발란스',applicant:'황태일',project:'뉴발란스 여름 캠페인'},
+  {zoneId:6,startWeek:26,endWeek:27,status:'PRE_BOOKED',brand:'컨버스',applicant:'임주리',project:'컨버스 척테일러 팝업'},
 ];
 const tCls={팝업:'type-popup',DID:'type-did',미디어월:'type-mediawall',빌보드:'type-billboard',외벽:'type-exterior'};
 const sCls={APPLIED:'cell-applied',PRE_BOOKED:'cell-prebooked',CONFIRMED:'cell-confirmed',COMPLETED:'cell-completed'};
 const sLbl={APPLIED:'A',PRE_BOOKED:'P',CONFIRMED:'C',COMPLETED:'✓'};
 const bCls={APPLIED:'badge-applied',PRE_BOOKED:'badge-prebooked',CONFIRMED:'badge-confirmed',COMPLETED:'badge-completed'};
-function getBk(zid,w){return bookings.find(b=>b.zoneId===zid&&w>=b.startWeek&&w<=b.endWeek)||null;}
+function getBk(zid,w){return bookings.find(b=>b.zoneId===zid&&w>=b.startWeek&&w<=b.endWeek&&!['PRE_BOOKED_MULTI'].includes(b._skip))||null;}
+function getBks(zid,w){return bookings.filter(b=>b.zoneId===zid&&w>=b.startWeek&&w<=b.endWeek);}
 function buildCalendar(){
   const table=document.getElementById('calTable');
   const groups={};
@@ -143,9 +151,20 @@ function buildCalendar(){
       tr.appendChild(ntd);
       for(let w=1;w<=WEEKS;w++){
         const td=document.createElement('td');
-        const bk=getBk(zone.id,w);
-        if(bk){td.className=sCls[bk.status]||'';td.innerHTML=`<div class="cell-bar">${sLbl[bk.status]||''}</div>`;td.onclick=()=>openDetailPanel(zone,bk);}
-        else{td.className='cell-empty';td.onclick=()=>openApplyPanel(zone,w);}
+        const bks=getBks(zone.id,w);
+        if(bks.length>1){
+          // 복수 가부킹: 주황 배경 + 건수 뱃지
+          td.className='cell-prebooked';
+          td.innerHTML=`<div class="cell-bar">P<span class="cell-count">${bks.length}</span></div>`;
+          td.onclick=()=>openMultiPanel(zone,w,bks);
+        } else if(bks.length===1){
+          const bk=bks[0];
+          td.className=sCls[bk.status]||'';
+          td.innerHTML=`<div class="cell-bar">${sLbl[bk.status]||''}</div>`;
+          td.onclick=()=>openDetailPanel(zone,bk);
+        } else {
+          td.className='cell-empty';td.onclick=()=>openApplyPanel(zone,w);
+        }
         tr.appendChild(td);
       }
       tbody.appendChild(tr);
@@ -176,6 +195,31 @@ function openDetailPanel(zone,bk){
   if(bk.status==='APPLIED')ac.innerHTML=`<button class="btn-primary" style="flex:1;">1차 승인</button><button class="btn-danger" style="flex:1;">반려</button>`;
   else if(bk.status==='PRE_BOOKED')ac.innerHTML=`<button class="btn-primary" style="flex:1;">최종 확정</button><button class="btn-danger" style="flex:1;">반려</button>`;
   else ac.innerHTML='';
+  openPanel();
+}
+function openMultiPanel(zone,week,bks){
+  document.getElementById('panelTitle').textContent=`가부킹 ${bks.length}건 — 경합 중`;
+  document.getElementById('panelSub').textContent=`${zone.name} · ${week}주차`;
+  const rows=bks.map((bk,i)=>`
+    <div style="border:1px solid #ffe0b2;border-radius:6px;padding:14px 14px 10px;margin-bottom:12px;background:#fffaf6;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <span style="font-size:13px;font-weight:700;color:#111;">${bk.brand}</span>
+        <span class="badge badge-prebooked">PRE_BOOKED</span>
+      </div>
+      <div class="panel-row" style="margin-bottom:6px;"><div class="panel-key">프로젝트</div><div class="panel-val">${bk.project}</div></div>
+      <div class="panel-row" style="margin-bottom:6px;"><div class="panel-key">신청자</div><div class="panel-val">${bk.applicant}</div></div>
+      <div class="panel-row" style="margin-bottom:10px;"><div class="panel-key">신청 기간</div><div class="panel-val">${bk.startWeek}주 ~ ${bk.endWeek}주</div></div>
+      <div style="display:flex;gap:6px;">
+        <button class="btn-primary" style="flex:1;font-size:12px;padding:5px 0;" onclick="alert('${bk.brand} 건을 최종 확정합니다. 나머지 ${bks.length-1}건은 자동 반려됩니다.')">확정</button>
+        <button class="btn-danger" style="flex:1;font-size:12px;padding:5px 0;" onclick="alert('${bk.brand} 건을 반려합니다.')">반려</button>
+      </div>
+    </div>`).join('');
+  document.getElementById('panelBody').innerHTML=`
+    <div style="background:#fff3e0;border-radius:6px;padding:10px 12px;margin-bottom:16px;font-size:12px;color:#7f4400;line-height:1.5;">
+      ⚠️ 동일 구좌·기간에 가부킹 <strong>${bks.length}건</strong>이 경합 중입니다.<br/>1건을 확정하면 나머지는 자동 반려됩니다.
+    </div>
+    ${rows}`;
+  document.getElementById('panelActions').innerHTML='';
   openPanel();
 }
 function openApplyPanel(zone,week){
