@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>오프라인 구좌 관리 — 신청 상세</title>
+  <link rel="stylesheet" href="common.css"/>
+  <style>
+    .content { max-width: 900px; margin: 32px auto; padding: 0 24px 60px; display: grid; grid-template-columns: 1fr 320px; gap: 20px; }
+    .breadcrumb { padding: 12px 24px; font-size: 12px; color: #888; }
+    .breadcrumb a { color: #1a73e8; text-decoration: none; }
+    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
+    .info-item { padding: 12px 0; border-bottom: 1px solid #f5f5f5; }
+    .info-item:nth-last-child(-n+2) { border-bottom: none; }
+    .info-key { font-size: 11px; color: #888; margin-bottom: 3px; }
+    .info-val { font-size: 13px; color: #222; font-weight: 500; }
+    .action-card { position: sticky; top: 80px; }
+    .reject-area { display: none; margin-top: 12px; }
+    .reject-area textarea { width: 100%; border: 1px solid #d0d0d0; border-radius: 4px; padding: 8px; font-size: 13px; }
+  </style>
+</head>
+<body>
+<nav class="gnb">
+  <a class="gnb-logo" href="index.html">무신사 구좌관리</a>
+  <div class="gnb-menu">
+    <a href="index.html">52주 캘린더</a>
+    <a href="booking-list.html" class="active">신청 목록</a>
+    <a href="zone-register.html">구좌 등록</a>
+  </div>
+  <div class="gnb-right">
+    <span class="gnb-user">박세연</span>
+    <span class="gnb-role">구좌 관리자</span>
+  </div>
+</nav>
+
+<div class="breadcrumb">
+  <a href="booking-list.html">신청 목록</a> &rsaquo; 신청 상세
+</div>
+
+<div style="padding:0 24px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;">
+  <div>
+    <div style="font-size:20px;font-weight:800;color:#111;">뉴발란스 204 발매</div>
+    <div style="margin-top:6px;display:flex;align-items:center;gap:8px;">
+      <span class="badge badge-applied">APPLIED</span>
+      <span class="type-badge type-popup">팝업</span>
+      <span style="font-size:12px;color:#aaa;">신청 #BK-2026-0042</span>
+    </div>
+  </div>
+</div>
+
+<div class="content">
+  <!-- 왼쪽: 상세 정보 + 이력 -->
+  <div>
+    <!-- 신청 정보 -->
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-header">신청 정보</div>
+      <div class="card-body">
+        <div class="info-grid">
+          <div class="info-item"><div class="info-key">구좌</div><div class="info-val">홍대점 팝업존 A</div></div>
+          <div class="info-item"><div class="info-key">매장</div><div class="info-val">무신사 스토어 홍대</div></div>
+          <div class="info-item"><div class="info-key">신청 기간</div><div class="info-val">2026-05-18 ~ 2026-06-01 (14일)</div></div>
+          <div class="info-item"><div class="info-key">신청일시</div><div class="info-val">2026-04-10 09:12</div></div>
+          <div class="info-item"><div class="info-key">신청자</div><div class="info-val">황태일 (풋웨어실)</div></div>
+          <div class="info-item"><div class="info-key">브랜드명</div><div class="info-val">뉴발란스</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 팝업 추가 정보 -->
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-header">팝업 신청 정보</div>
+      <div class="card-body">
+        <div class="info-grid">
+          <div class="info-item"><div class="info-key">프로젝트명</div><div class="info-val">뉴발란스 204 발매</div></div>
+          <div class="info-item"><div class="info-key">커머스 유형</div><div class="info-val">브랜드이슈</div></div>
+          <div class="info-item"><div class="info-key">무신사 입점여부</div><div class="info-val">입점</div></div>
+          <div class="info-item"><div class="info-key">OOH 연계 여부</div><div class="info-val">O (진행)</div></div>
+        </div>
+        <div style="margin-top:12px;">
+          <div class="info-key">컨텐츠 전개 방향</div>
+          <div class="info-val" style="margin-top:4px;line-height:1.6;">오프라인 전용 발매 이슈상품. 메가 쇼케이스 형태로 진행 예정. 글로벌 컬래버레이션 제품 위주 전시 및 판매.</div>
+        </div>
+        <div style="margin-top:12px;">
+          <div class="info-key">요청사항</div>
+          <div class="info-val" style="margin-top:4px;line-height:1.6;color:#666;">설치 2일 / 철거 1일 필요. 전기 콘센트 4구 이상 요청.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 상태 변경 이력 -->
+    <div class="card">
+      <div class="card-header">상태 변경 이력</div>
+      <div class="card-body">
+        <ul class="timeline">
+          <li class="timeline-item">
+            <div class="timeline-dot" style="background:#fff9c4;color:#856404;font-size:11px;font-weight:700;">A</div>
+            <div class="timeline-content">
+              <div class="timeline-date">2026-04-10 09:12</div>
+              <div class="timeline-text">APPLIED — 신청 접수</div>
+              <div class="timeline-sub">황태일 (풋웨어실)</div>
+            </div>
+          </li>
+        </ul>
+        <div style="text-align:center;padding:20px;color:#ccc;font-size:12px;">이후 이력이 없습니다</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 오른쪽: 액션 카드 -->
+  <div class="action-card">
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-header">승인 처리</div>
+      <div class="card-body">
+        <div style="margin-bottom:12px;">
+          <div style="font-size:12px;color:#888;margin-bottom:4px;">현재 상태</div>
+          <span class="badge badge-applied" style="font-size:12px;padding:4px 12px;">APPLIED</span>
+        </div>
+        <button class="btn-primary" style="width:100%;margin-bottom:8px;" onclick="alert('1차 승인 처리되었습니다.\n상태: PRE_BOOKED')">
+          1차 승인 (PRE_BOOKED)
+        </button>
+        <button class="btn-danger" style="width:100%;" onclick="toggleReject()">
+          반려 (REJECTED)
+        </button>
+        <div class="reject-area" id="rejectArea">
+          <div style="font-size:12px;color:#d32f2f;margin:10px 0 4px;">반려 사유 입력 (필수)</div>
+          <textarea rows="3" placeholder="반려 사유를 입력하세요 (최대 500자)"></textarea>
+          <button class="btn-danger" style="width:100%;margin-top:8px;" onclick="alert('반려 처리되었습니다.')">반려 확정</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 구좌 정보 -->
+    <div class="card">
+      <div class="card-header">구좌 정보</div>
+      <div class="card-body">
+        <div style="background:#f5f5f5;border-radius:6px;height:120px;display:flex;align-items:center;justify-content:center;color:#bbb;font-size:12px;margin-bottom:12px;">📷 위치 사진</div>
+        <div class="panel-row"><div class="panel-key">구좌명</div><div class="panel-val">홍대점 팝업존 A</div></div>
+        <div class="panel-row"><div class="panel-key">위치</div><div class="panel-val">1층 입구 우측</div></div>
+        <div class="panel-row"><div class="panel-key">규격</div><div class="panel-val">600cm × 400cm</div></div>
+        <div class="panel-row"><div class="panel-key">운영 가능 기간</div><div class="panel-val">2026-01-01 ~ 2026-12-31</div></div>
+        <a href="index.html" style="font-size:12px;color:#1a73e8;display:block;margin-top:8px;">캘린더에서 보기 →</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function toggleReject(){
+  const area=document.getElementById('rejectArea');
+  area.style.display=area.style.display==='none'||area.style.display===''?'block':'none';
+}
+</script>
+</body>
+</html>

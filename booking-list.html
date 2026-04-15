@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>오프라인 구좌 관리 — 신청 목록</title>
+  <link rel="stylesheet" href="common.css"/>
+  <style>
+    .content { padding: 24px; }
+    .tabs { display: flex; gap: 0; border-bottom: 2px solid #e0e0e0; margin-bottom: 20px; }
+    .tab { padding: 10px 20px; font-size: 13px; font-weight: 600; color: #888; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; }
+    .tab.active { color: #1a73e8; border-bottom: 2px solid #1a73e8; }
+    .tab-count { display: inline-block; background: #f0f0f0; color: #666; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 8px; margin-left: 4px; }
+    .tab.active .tab-count { background: #e8f0fe; color: #1a73e8; }
+    .summary-cards { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 20px; }
+    .summary-card { background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; padding: 16px 20px; }
+    .summary-label { font-size: 11px; color: #888; margin-bottom: 6px; }
+    .summary-num { font-size: 24px; font-weight: 800; color: #111; }
+    .summary-num.applied { color: #856404; }
+    .summary-num.prebooked { color: #7f4400; }
+    .summary-num.confirmed { color: #1b5e20; }
+  </style>
+</head>
+<body>
+<nav class="gnb">
+  <a class="gnb-logo" href="index.html">무신사 구좌관리</a>
+  <div class="gnb-menu">
+    <a href="index.html">52주 캘린더</a>
+    <a href="booking-list.html" class="active">신청 목록</a>
+    <a href="zone-register.html">구좌 등록</a>
+  </div>
+  <div class="gnb-right">
+    <span class="gnb-user">박세연</span>
+    <span class="gnb-role">구좌 관리자</span>
+  </div>
+</nav>
+
+<div class="page-header">
+  <div>
+    <div class="page-title">신청 목록</div>
+    <div class="page-sub">전체 구좌 신청 현황을 관리합니다</div>
+  </div>
+  <button class="btn-primary" onclick="alert('신청 화면으로 이동')">+ 신청하기</button>
+</div>
+
+<div class="content">
+  <!-- 요약 카드 -->
+  <div class="summary-cards">
+    <div class="summary-card"><div class="summary-label">승인 대기 (APPLIED)</div><div class="summary-num applied">5</div></div>
+    <div class="summary-card"><div class="summary-label">가부킹 (PRE_BOOKED)</div><div class="summary-num prebooked">3</div></div>
+    <div class="summary-card"><div class="summary-label">확정 (CONFIRMED)</div><div class="summary-num confirmed">8</div></div>
+    <div class="summary-card"><div class="summary-label">전체 신청</div><div class="summary-num">21</div></div>
+  </div>
+
+  <!-- 탭 -->
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('all',this)">전체 <span class="tab-count">21</span></div>
+    <div class="tab" onclick="switchTab('applied',this)">승인 대기 <span class="tab-count">5</span></div>
+    <div class="tab" onclick="switchTab('prebooked',this)">가부킹 <span class="tab-count">3</span></div>
+    <div class="tab" onclick="switchTab('confirmed',this)">확정 <span class="tab-count">8</span></div>
+    <div class="tab" onclick="switchTab('completed',this)">완료 <span class="tab-count">5</span></div>
+  </div>
+
+  <!-- 필터 -->
+  <div class="toolbar" style="margin-bottom:16px;border:1px solid #e0e0e0;border-radius:8px;">
+    <div class="filter-group">
+      <span class="filter-label">구좌 유형</span>
+      <select><option>전체</option><option>팝업</option><option>빌보드</option><option>외벽</option><option>DID</option><option>미디어월</option></select>
+    </div>
+    <div class="filter-group">
+      <span class="filter-label">매장</span>
+      <select><option>전체</option><option>무신사 스토어 홍대</option><option>무신사 스토어 성수</option><option>무신사 스페이스 한남</option></select>
+    </div>
+    <div class="filter-group">
+      <span class="filter-label">기간</span>
+      <input type="date" value="2026-01-01" style="width:130px;"/>
+      <span style="color:#aaa;">~</span>
+      <input type="date" value="2026-12-31" style="width:130px;"/>
+    </div>
+    <div class="filter-group">
+      <input type="text" placeholder="브랜드명 / 신청자 검색" style="width:200px;"/>
+    </div>
+    <button class="btn-secondary" style="margin-left:auto;">엑셀 다운로드</button>
+  </div>
+
+  <!-- 테이블 -->
+  <div class="card">
+    <table class="data-table" id="bookingTable">
+      <thead>
+        <tr>
+          <th>NO</th>
+          <th>상태</th>
+          <th>구좌명</th>
+          <th>유형</th>
+          <th>브랜드</th>
+          <th>프로젝트명</th>
+          <th>신청 기간</th>
+          <th>신청자</th>
+          <th>신청일</th>
+          <th>액션</th>
+        </tr>
+      </thead>
+      <tbody id="bookingBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+const bookings = [
+  {id:1,status:'APPLIED',zone:'홍대점 팝업존 A',type:'팝업',brand:'뉴발란스',project:'뉴발란스 204 발매',period:'2026-05-18 ~ 2026-06-01',applicant:'황태일',date:'2026-04-10'},
+  {id:2,status:'APPLIED',zone:'성수점 팝업존 B',type:'팝업',brand:'챔피온',project:'챔피온 x 언더커버',period:'2026-05-04 ~ 2026-05-18',applicant:'임주리',date:'2026-04-11'},
+  {id:3,status:'APPLIED',zone:'홍대점 DID-1',type:'DID',brand:'삼성',project:'갤럭시 S25 캠페인',period:'2026-04-20 ~ 2026-04-30',applicant:'박상혁',date:'2026-04-12'},
+  {id:4,status:'APPLIED',zone:'강남대로 빌보드',type:'빌보드',brand:'나이키',project:'나이키 빌보드',period:'2026-05-01 ~ 2026-06-30',applicant:'광고사업팀',date:'2026-04-13'},
+  {id:5,status:'APPLIED',zone:'한남점 팝업존',type:'팝업',brand:'디앤에스알',project:'디앤에스알 팝업',period:'2026-04-25 ~ 2026-05-05',applicant:'노양래',date:'2026-04-14'},
+  {id:6,status:'PRE_BOOKED',zone:'홍대점 팝업존 B',type:'팝업',brand:'엔하이픈',project:'엔하이픈 앨범 발매',period:'2026-04-07 ~ 2026-04-14',applicant:'임재훈',date:'2026-04-01'},
+  {id:7,status:'PRE_BOOKED',zone:'성수점 외벽',type:'외벽',brand:'나이키',project:'나이키 외벽',period:'2026-05-04 ~ 2026-06-01',applicant:'유대곤',date:'2026-04-05'},
+  {id:8,status:'PRE_BOOKED',zone:'홍대점 미디어월',type:'미디어월',brand:'LG',project:'LG 올레드 캠페인',period:'2026-04-20 ~ 2026-04-30',applicant:'김강희',date:'2026-04-08'},
+  {id:9,status:'CONFIRMED',zone:'홍대점 팝업존 A',type:'팝업',brand:'MAC',project:'MAC 신제품 팝업',period:'2026-04-07 ~ 2026-04-28',applicant:'박세연',date:'2026-03-25'},
+  {id:10,status:'CONFIRMED',zone:'성수점 팝업존 A',type:'팝업',brand:'로제',project:'블랙핑크 로제 팝업',period:'2026-04-14 ~ 2026-05-11',applicant:'최진영',date:'2026-03-28'},
+  {id:11,status:'CONFIRMED',zone:'홍대점 DID-1',type:'DID',brand:'아디다스',project:'아디다스 DID',period:'2026-04-14 ~ 2026-05-04',applicant:'박상혁',date:'2026-04-02'},
+  {id:12,status:'CONFIRMED',zone:'무신사 스토어 성수 빌보드',type:'빌보드',brand:'무신사',project:'무신사 브랜드 캠페인',period:'2026-04-07 ~ 2026-05-18',applicant:'광고사업팀',date:'2026-03-30'},
+  {id:13,status:'COMPLETED',zone:'성수점 외벽',type:'외벽',brand:'엄브로',project:'엄브로 외벽 광고',period:'2026-03-17 ~ 2026-04-21',applicant:'곽민영',date:'2026-03-01'},
+  {id:14,status:'COMPLETED',zone:'홍대점 DID-1',type:'DID',brand:'나이키',project:'나이키 캠페인',period:'2026-03-03 ~ 2026-04-01',applicant:'김강희',date:'2026-02-20'},
+];
+
+const badgeCls={APPLIED:'badge-applied',PRE_BOOKED:'badge-prebooked',CONFIRMED:'badge-confirmed',COMPLETED:'badge-completed',REJECTED:'badge-rejected',CANCELLED:'badge-cancelled'};
+const typeCls={팝업:'type-popup',DID:'type-did',미디어월:'type-mediawall',빌보드:'type-billboard',외벽:'type-exterior'};
+
+let currentTab='all';
+function switchTab(tab,el){
+  currentTab=tab;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  renderTable();
+}
+function renderTable(){
+  const filtered=bookings.filter(b=>{
+    if(currentTab==='all')return true;
+    if(currentTab==='applied')return b.status==='APPLIED';
+    if(currentTab==='prebooked')return b.status==='PRE_BOOKED';
+    if(currentTab==='confirmed')return b.status==='CONFIRMED';
+    if(currentTab==='completed')return b.status==='COMPLETED';
+    return true;
+  });
+  const tbody=document.getElementById('bookingBody');
+  tbody.innerHTML=filtered.map((b,i)=>`
+    <tr onclick="location.href='booking-detail.html'">
+      <td style="color:#aaa;">${i+1}</td>
+      <td><span class="badge ${badgeCls[b.status]}">${b.status}</span></td>
+      <td style="font-weight:500;">${b.zone}</td>
+      <td><span class="type-badge ${typeCls[b.type]}">${b.type}</span></td>
+      <td>${b.brand}</td>
+      <td>${b.project}</td>
+      <td style="white-space:nowrap;font-size:12px;color:#666;">${b.period}</td>
+      <td>${b.applicant}</td>
+      <td style="font-size:12px;color:#999;">${b.date}</td>
+      <td onclick="event.stopPropagation()">
+        ${b.status==='APPLIED'?`<button class="btn-primary" style="padding:4px 10px;font-size:11px;" onclick="event.stopPropagation();alert('1차 승인 처리')">1차 승인</button>`:''}
+        ${b.status==='PRE_BOOKED'?`<button class="btn-primary" style="padding:4px 10px;font-size:11px;" onclick="event.stopPropagation();alert('최종 확정 처리')">최종 확정</button>`:''}
+        ${b.status==='APPLIED'||b.status==='PRE_BOOKED'?`<button class="btn-danger" style="padding:4px 10px;font-size:11px;margin-left:4px;" onclick="event.stopPropagation();alert('반려 처리')">반려</button>`:''}
+        ${b.status==='COMPLETED'||b.status==='CONFIRMED'?`<span style="color:#ccc;font-size:12px;">—</span>`:''}
+      </td>
+    </tr>`).join('');
+}
+renderTable();
+</script>
+</body>
+</html>

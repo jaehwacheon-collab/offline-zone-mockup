@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>오프라인 구좌 관리 — 구좌 등록</title>
+  <link rel="stylesheet" href="common.css"/>
+  <style>
+    .content { max-width: 760px; margin: 32px auto; padding: 0 24px 60px; }
+    .dynamic-section { background: #f8f9fa; border: 1px solid #e8e8e8; border-radius: 6px; padding: 16px; margin-top: 4px; }
+    .dynamic-title { font-size: 12px; font-weight: 700; color: #555; margin-bottom: 12px; }
+    .photo-upload { border: 2px dashed #d0d0d0; border-radius: 6px; padding: 32px; text-align: center; cursor: pointer; color: #aaa; font-size: 13px; }
+    .photo-upload:hover { border-color: #1a73e8; color: #1a73e8; background: #f0f4ff; }
+    .form-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 24px; }
+    .badge-active { display: inline-block; background: #e8f5e9; color: #2e7d32; font-size: 11px; padding: 2px 8px; border-radius: 10px; font-weight: 700; }
+  </style>
+</head>
+<body>
+<nav class="gnb">
+  <a class="gnb-logo" href="index.html">무신사 구좌관리</a>
+  <div class="gnb-menu">
+    <a href="index.html">52주 캘린더</a>
+    <a href="booking-list.html">신청 목록</a>
+    <a href="zone-register.html" class="active">구좌 등록</a>
+  </div>
+  <div class="gnb-right">
+    <span class="gnb-user">박세연</span>
+    <span class="gnb-role">구좌 관리자</span>
+  </div>
+</nav>
+
+<div class="page-header">
+  <div>
+    <div class="page-title">구좌 등록</div>
+    <div class="page-sub">새로운 구좌를 시스템에 등록합니다</div>
+  </div>
+</div>
+
+<div class="content">
+
+  <!-- 매장 정보 -->
+  <div class="card" style="margin-bottom:20px;">
+    <div class="card-header">매장(Venue) 정보</div>
+    <div class="card-body">
+      <div class="form-group">
+        <label class="form-label">매장 선택</label>
+        <select class="form-input" id="venueSelect" onchange="handleVenueChange(this.value)">
+          <option value="">선택 안 함 (독립 구좌로 등록)</option>
+          <option value="hongdae">무신사 스토어 홍대</option>
+          <option value="seongsu">무신사 스토어 성수</option>
+          <option value="hannam">무신사 스페이스 한남</option>
+          <option value="new">+ 신규 매장 등록</option>
+        </select>
+        <div class="form-hint">미선택 시 독립 구좌(빌보드 등)로 등록됩니다</div>
+      </div>
+      <div id="newVenueFields" style="display:none;">
+        <div class="dynamic-section">
+          <div class="dynamic-title">신규 매장 정보</div>
+          <div class="form-row">
+            <div class="form-group"><label class="form-label required">매장명</label><input class="form-input" placeholder="예: 무신사 스토어 부산"/></div>
+            <div class="form-group"><label class="form-label">주소</label><input class="form-input" placeholder="도로명 주소 입력"/></div>
+          </div>
+          <div class="form-group"><label class="form-label required">담당자</label><select class="form-input"><option>담당자 선택</option><option>박세연</option><option>임재훈</option><option>김강희</option></select></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 구좌 기본 정보 -->
+  <div class="card" style="margin-bottom:20px;">
+    <div class="card-header">구좌(Zone) 기본 정보</div>
+    <div class="card-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label required">구좌명</label>
+          <input class="form-input" placeholder="예: 홍대점 1층 팝업존 A"/>
+          <div class="form-hint">자유 입력 — 사용자가 식별할 수 있는 이름으로 작성</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label required">구좌 유형</label>
+          <select class="form-input" id="typeSelect" onchange="handleTypeChange(this.value)">
+            <option value="">유형 선택</option>
+            <option value="popup">팝업</option>
+            <option value="billboard">빌보드</option>
+            <option value="exterior">외벽</option>
+            <option value="did">DID</option>
+            <option value="mediawall">미디어월</option>
+          </select>
+          <div class="form-hint">등록 후 변경 불가</div>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label required">위치 설명</label>
+          <input class="form-input" placeholder="예: 1층 입구 우측"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label required">규격 (가로 × 세로)</label>
+          <input class="form-input" placeholder="예: 600cm × 400cm"/>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">위치 사진</label>
+        <div class="photo-upload" onclick="alert('파일 선택 (목업)')">
+          <div style="font-size:24px;margin-bottom:6px;">📷</div>
+          <div>클릭하여 사진 업로드</div>
+          <div style="font-size:11px;margin-top:4px;">JPG, PNG / 최대 10MB</div>
+        </div>
+        <div class="form-hint">사용자가 구좌 위치를 식별할 수 있도록 실사 이미지를 첨부해주세요</div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label required">운영 가능 기간</label>
+          <div style="display:flex;gap:6px;align-items:center;">
+            <input class="form-input" type="date" value="2026-04-15" style="flex:1;"/>
+            <span style="color:#aaa;">~</span>
+            <input class="form-input" type="date" value="2026-12-31" style="flex:1;"/>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">단가 (일 기준, 원)</label>
+          <input class="form-input" type="number" placeholder="0"/>
+          <div class="form-hint">Phase 3 정산 연계 시 활용</div>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label required">활성 상태</label>
+          <select class="form-input">
+            <option>활성</option>
+            <option>비활성</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">비고</label>
+        <textarea class="form-input" rows="3" placeholder="기타 운영 관련 참고사항"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- 유형별 추가 항목 -->
+  <div id="extraSection" style="display:none; margin-bottom:20px;">
+    <div class="card">
+      <div class="card-header" id="extraTitle">추가 정보</div>
+      <div class="card-body" id="extraBody"></div>
+    </div>
+  </div>
+
+  <div class="form-actions">
+    <button class="btn-secondary" onclick="history.back()">취소</button>
+    <button class="btn-primary" onclick="alert('구좌가 등록되었습니다.\n즉시 캘린더에 반영됩니다.')">저장</button>
+  </div>
+</div>
+
+<script>
+function handleVenueChange(val) {
+  document.getElementById('newVenueFields').style.display = val==='new' ? 'block' : 'none';
+}
+function handleTypeChange(type) {
+  const sec = document.getElementById('extraSection');
+  const title = document.getElementById('extraTitle');
+  const body = document.getElementById('extraBody');
+  if(!type){sec.style.display='none';return;}
+  sec.style.display='block';
+  if(type==='billboard'||type==='exterior'){
+    title.textContent='빌보드 / 외벽 추가 정보';
+    body.innerHTML=`
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">시공 가능일</label><input class="form-input" type="date"/><div class="form-hint">운영 시작 전 시공 가능한 날짜</div></div>
+        <div class="form-group"><label class="form-label">철거 가능일</label><input class="form-input" type="date"/><div class="form-hint">운영 종료 후 철거 가능한 날짜</div></div>
+      </div>
+      <div class="form-group"><label class="form-label">담당 대행사 / 시공사</label><input class="form-input" placeholder="소재 전달 대상 업체명"/></div>`;
+  } else if(type==='did'||type==='mediawall'){
+    title.textContent='DID / 미디어월 추가 정보';
+    body.innerHTML=`
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">화면 해상도</label><input class="form-input" placeholder="예: 1920×1080"/></div>
+        <div class="form-group"><label class="form-label">재생 가능 포맷</label><input class="form-input" placeholder="예: MP4, JPG"/><div class="form-hint">참고용 — Phase 2 소재 관리 연계 예정</div></div>
+      </div>`;
+  } else {
+    sec.style.display='none';
+  }
+}
+</script>
+</body>
+</html>
